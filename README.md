@@ -51,3 +51,6 @@ That is, a JSON object whose keys are the card names and the respective values a
 ### Scoreboard
 We implemented a simple scoreboard so that at the end of the game we print out to the user interface the scores (who won, who came second, ...).
 Also, the scoreboard is persisted to a `scoreboard.json` file.
+
+### Demo
+Demo concept: https://drive.google.com/file/d/1Chwr_dPZVLeAvZNA8x3c_1y4BwfLezgP/view
