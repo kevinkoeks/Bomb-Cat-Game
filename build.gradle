@@ -1,0 +1,51 @@
+plugins {
+    id 'java'
+}
+
+jar {
+    manifest {
+        attributes(
+                'Main-Class': 'vu.nl.group2.kittens.ExplodingKittens'
+        )
+    }
+}
+
+group 'nl.vu.group2.kittens'
+version '1.0-SNAPSHOT'
+
+repositories {
+    mavenCentral()
+}
+
+sourceCompatibility = 11
+targetCompatibility = 11
+
+// lib versions
+def apacheCommonsVersion = '3.11'
+def jUnitVersion = '5.7.1'
+def slf4jVersion = '2.0.0-alpha0'
+def fastJsonVersion = '1.2.75'
+def lombokVersion = '1.18.18'
+def textIoVersion = '3.4.1'
+
+dependencies {
+
+    compile group: 'org.apache.commons', name: 'commons-lang3', version: apacheCommonsVersion
+    compile group: 'org.slf4j', name: 'slf4j-api', version: slf4jVersion
+    compile group: 'org.slf4j', name: 'slf4j-log4j12', version: slf4jVersion
+    compile group: 'com.alibaba', name: 'fastjson', version: fastJsonVersion
+    compileOnly group: 'org.projectlombok', name: 'lombok', version: lombokVersion
+    annotationProcessor group: 'org.projectlombok', name: 'lombok', version: lombokVersion
+
+    testCompileOnly group: 'org.projectlombok', name: 'lombok', version: lombokVersion
+    testAnnotationProcessor group: 'org.projectlombok', name: 'lombok', version: lombokVersion
+    testCompile group: 'org.junit.jupiter', name: 'junit-jupiter-engine', version: jUnitVersion
+    testImplementation group: 'org.mockito', name: 'mockito-all', version: '1.10.19'
+
+    // CLI UI
+    compile group: 'org.beryx', name: 'text-io', version: textIoVersion
+}
+
+test {
+    useJUnitPlatform()
+}
