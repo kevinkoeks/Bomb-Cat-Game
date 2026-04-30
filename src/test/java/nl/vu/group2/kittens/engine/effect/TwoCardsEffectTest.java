@@ -4,9 +4,9 @@ import nl.vu.group2.kittens.engine.player.Player;
 import nl.vu.group2.kittens.model.Card;
 import org.junit.jupiter.api.Test;
 
+import java.util.Collection;
 import java.util.Optional;
 
-import static org.mockito.Matchers.anyCollectionOf;
 import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -25,7 +25,7 @@ class TwoCardsEffectTest extends ComboEffectTestBase {
 
     @Test
     void simpleTwoCardsEffectScenario() {
-        when(playerA.selectPlayer(anyCollectionOf(Player.class)))
+        when(playerA.selectPlayer(any(Collection.class)))
                 .thenReturn(playerB);
         when(playerA.selectCardOf(playerB))
                 .thenReturn(Optional.of(Card.ATTACK));
@@ -40,7 +40,7 @@ class TwoCardsEffectTest extends ComboEffectTestBase {
 
     @Test
     void opponentWithNoCardsScenario() {
-        when(playerA.selectPlayer(anyCollectionOf(Player.class)))
+        when(playerA.selectPlayer(any(Collection.class)))
                 .thenReturn(playerB);
         when(playerA.selectCardOf(playerB))
                 .thenReturn(Optional.empty());

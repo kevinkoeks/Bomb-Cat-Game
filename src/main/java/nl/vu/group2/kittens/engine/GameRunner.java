@@ -42,6 +42,7 @@ import static nl.vu.group2.kittens.model.GameEvent.systemEvent;
 public class GameRunner {
 
     private static final int INITIAL_HAND_SIZE = 8;
+    private static final int MAX_NAME_LENGTH = 30;
     private static final String AI_PLAYER_NAME_PATTERN = "^AI \\d+$";
     private static final String YES_NO_CHOICE = "^[YyNn]?$";
     private static final Duration JOIN_TIMEOUT = Duration.ofDays(7L);
@@ -125,7 +126,7 @@ public class GameRunner {
         String name;
         do {
             name = ui.query("Insert your name");
-            if (name.isBlank() || name.matches(AI_PLAYER_NAME_PATTERN)) {
+            if (name.isBlank() || name.length() > MAX_NAME_LENGTH || name.matches(AI_PLAYER_NAME_PATTERN)) {
                 ui.notify(errorEvent("You chose an invalid name, please enter again your choice."));
                 name = null;
             }
@@ -173,7 +174,7 @@ public class GameRunner {
             final String pathInput = ui.query("Enter the path to the deck");
             final Path deckPath;
             try {
-                deckPath = Paths.get(pathInput);
+                deckPath = Paths.get(pathInput).normalize();
                 if (Files.notExists(deckPath) || Files.isDirectory(deckPath)) {
                     throw new InvalidPathException(pathInput, "The path either does not exist or is a directory");
                 }
