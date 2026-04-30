@@ -23,6 +23,7 @@ import java.util.concurrent.CompletableFuture;
 public class AiPlayer extends Player {
 
     private static final int WAIT_TIME = 750;
+    private static final Random RANDOM = new Random();
 
     public AiPlayer(String id) {
         super(id);
@@ -36,35 +37,35 @@ public class AiPlayer extends Player {
 
     @Override
     public Card selectCardType() {
-        pauseAiPlayer();
+        if (pauseAiPlayer()) return EnumUtils.getEnumList(Card.class).get(0);
         final List<Card> allCardVariants = EnumUtils.getEnumList(Card.class);
         return returnRandom(allCardVariants);
     }
 
     @Override
     public Player selectPlayer(Collection<Player> players) {
-        pauseAiPlayer();
+        if (pauseAiPlayer()) return players.iterator().next();
         return returnRandom(players);
     }
 
     @Override
     public Optional<Card> selectCardOf(Player player) {
-        pauseAiPlayer();
+        if (pauseAiPlayer()) return Optional.empty();
         final List<Card> opponentHand = player.getHand();
         return Optional.ofNullable(returnRandom(opponentHand));
     }
 
     @Override
     public List<Card> selectCardFrom(Collection<Card> cards) {
-        pauseAiPlayer();
-        if (cards.isEmpty() || new Random().nextBoolean()) { // sometimes just return nothing
+        if (pauseAiPlayer()) return List.of();
+        if (cards.isEmpty() || RANDOM.nextBoolean()) { // sometimes just return nothing
             return List.of();
         }
         return playCard(cards, returnRandom(cards));
     }
 
     private List<Card> playCard(Collection<Card> cards, Card choice) {
-        pauseAiPlayer();
+        if (pauseAiPlayer()) return List.of();
         int numberOfSameCards = Collections.frequency(cards, choice);
         if (numberOfSameCards > 1) {
             return createCombo(choice, numberOfSameCards);
@@ -87,13 +88,13 @@ public class AiPlayer extends Player {
         if (deckSize <= 0) {
             return 0;
         }
-        return new Random().nextInt(deckSize - 1);
+        return RANDOM.nextInt(deckSize - 1);
     }
 
     @Override
     public void askForNope(String action, CompletableFuture<Optional<Player>> nopePlayedBy) {
         // NOTE: an AI player does _not_ always play a NOPE card
-        if (this.getHand().contains(Card.NOPE) && new Random().nextBoolean()) {
+        if (this.getHand().contains(Card.NOPE) && RANDOM.nextBoolean()) {
             log.info("{} is noping", getId());
             // supplyAsync is used to have some (minimal) variance in playing the NOPE
             // due to the JVM assigning a thread to this runnable
@@ -106,17 +107,20 @@ public class AiPlayer extends Player {
      * If the collection is empty, this method will return null.
      */
     private <T> T returnRandom(Collection<T> coll) {
-        int rand = new Random().nextInt(coll.size());
+        int rand = RANDOM.nextInt(coll.size());
         for (T elem : coll) if (--rand < 0) return elem;
         return null;
     }
 
-    private void pauseAiPlayer() {
+    /** Returns true if the thread was interrupted during the pause. */
+    private boolean pauseAiPlayer() {
         try {
             Thread.sleep(WAIT_TIME);
+            return false;
         } catch (InterruptedException e) {
             log.error("AI player interrupted while sleeping", e);
             Thread.currentThread().interrupt();
+            return true;
         }
     }
 }

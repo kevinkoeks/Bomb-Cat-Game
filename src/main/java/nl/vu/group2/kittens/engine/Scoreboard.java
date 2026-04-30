@@ -3,12 +3,15 @@ package nl.vu.group2.kittens.engine;
 import com.alibaba.fastjson.JSON;
 import lombok.extern.slf4j.Slf4j;
 
-import java.io.File;
 import java.io.IOException;
+import java.nio.ByteBuffer;
+import java.nio.channels.FileChannel;
+import java.nio.channels.FileLock;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.StandardOpenOption;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -22,22 +25,20 @@ public class Scoreboard {
     public Scoreboard() {
         log.info("Creating new scoreboard");
         try {
-            File scoreboard = new File(SCOREBOARD_FILE_PATH.toString());
-            deleteScoreboard();
-            if (scoreboard.createNewFile()) {
-                log.info("Successfully created scoreboard");
-            }
+            Files.deleteIfExists(SCOREBOARD_FILE_PATH);
         } catch (IOException e) {
-            log.warn("Error creating scoreboard", e);
+            log.warn("Error deleting old scoreboard", e);
         }
     }
 
     public void update() {
         final List<Result> resultsCopy = new ArrayList<>(results);
         Collections.sort(resultsCopy);
-        try {
-            final String jsonResults = JSON.toJSONString(resultsCopy);
-            Files.write(SCOREBOARD_FILE_PATH, jsonResults.getBytes(StandardCharsets.UTF_8));
+        final byte[] jsonBytes = JSON.toJSONString(resultsCopy).getBytes(StandardCharsets.UTF_8);
+        try (FileChannel channel = FileChannel.open(SCOREBOARD_FILE_PATH,
+                StandardOpenOption.WRITE, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
+             FileLock ignored = channel.lock()) {
+            channel.write(ByteBuffer.wrap(jsonBytes));
         } catch (IOException e) {
             log.error("Failed to update scoreboard", e);
             throw new IllegalStateException(e);
@@ -46,10 +47,6 @@ public class Scoreboard {
 
     public void add(String player, int score) {
         results.add(new Result(player, score));
-    }
-
-    private void deleteScoreboard() throws IOException {
-        Files.deleteIfExists(SCOREBOARD_FILE_PATH);
     }
 
     @Override
