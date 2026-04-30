@@ -122,22 +122,28 @@ public class GameRunner {
     }
 
     private String selectName() {
-        final String name = ui.query("Insert your name");
-        if (name.isBlank() || name.matches(AI_PLAYER_NAME_PATTERN)) {
-            ui.notify(errorEvent("You chose an invalid name, please enter again your choice."));
-            return selectName();
-        }
+        String name;
+        do {
+            name = ui.query("Insert your name");
+            if (name.isBlank() || name.matches(AI_PLAYER_NAME_PATTERN)) {
+                ui.notify(errorEvent("You chose an invalid name, please enter again your choice."));
+                name = null;
+            }
+        } while (name == null);
         return name;
     }
     // </editor-fold>
 
     // <editor-fold desc="Create deck methods">
     private List<Card> createDeckCards(List<Player> players) {
-        final String deckChoiceYn = ui.query("Do you want to use the base deck? (Y/n)");
-        if (!deckChoiceYn.matches(YES_NO_CHOICE)) {
-            ui.notify(errorEvent("Please write Y, N, or leave blank."));
-            return createDeckCards(players);
-        }
+        String deckChoiceYn;
+        do {
+            deckChoiceYn = ui.query("Do you want to use the base deck? (Y/n)");
+            if (!deckChoiceYn.matches(YES_NO_CHOICE)) {
+                ui.notify(errorEvent("Please write Y, N, or leave blank."));
+                deckChoiceYn = null;
+            }
+        } while (deckChoiceYn == null);
         if (deckChoiceYn.equalsIgnoreCase("n")) {
             return getCardsForCustomDeck(players.size());
         } else {
@@ -163,34 +169,35 @@ public class GameRunner {
     }
 
     private List<Card> getCardsForCustomDeck(int playersCount) {
-        final String pathInput = ui.query("Enter the path to the deck");
-        final Path deckPath;
-        try {
-            deckPath = Paths.get(pathInput);
-            if (Files.notExists(deckPath) || Files.isDirectory(deckPath)) {
-                throw new InvalidPathException(pathInput, "The path either does not exist or is a directory");
+        while (true) {
+            final String pathInput = ui.query("Enter the path to the deck");
+            final Path deckPath;
+            try {
+                deckPath = Paths.get(pathInput);
+                if (Files.notExists(deckPath) || Files.isDirectory(deckPath)) {
+                    throw new InvalidPathException(pathInput, "The path either does not exist or is a directory");
+                }
+            } catch (InvalidPathException throwable) {
+                ui.notify(errorEvent("Please provide a valid path"));
+                continue;
             }
-        } catch (InvalidPathException throwable) {
-            ui.notify(errorEvent("Please provide a valid path"));
-            return getCardsForCustomDeck(playersCount);
-        }
-        final String deckJson;
-        try {
-            deckJson = Files.readString(deckPath);
-        } catch (IOException e) {
-            ui.notify(errorEvent("Error while reading, please provide a valid path"));
-            return getCardsForCustomDeck(playersCount);
-        }
-        try {
-            final Map<Card, Integer> parsedMap = JSON.parseObject(deckJson, new TypeReference<>() {
-            });
-            final List<Card> deckCards = validateCustomDeck(parsedMap, playersCount);
-            ui.notify(infoEvent("Custom deck successfully loaded."));
-            return deckCards;
-        } catch (JSONException | InvalidDeckException exception) {
-            log.error("Error while parsing the JSON file containing the deck", exception);
-            ui.notify(errorEvent("Error while parsing the JSON file, please provide a valid file. For more information, check the logs."));
-            return getCardsForCustomDeck(playersCount);
+            final String deckJson;
+            try {
+                deckJson = Files.readString(deckPath);
+            } catch (IOException e) {
+                ui.notify(errorEvent("Error while reading, please provide a valid path"));
+                continue;
+            }
+            try {
+                final Map<Card, Integer> parsedMap = JSON.parseObject(deckJson, new TypeReference<>() {
+                });
+                final List<Card> deckCards = validateCustomDeck(parsedMap, playersCount);
+                ui.notify(infoEvent("Custom deck successfully loaded."));
+                return deckCards;
+            } catch (JSONException | InvalidDeckException exception) {
+                log.error("Error while parsing the JSON file containing the deck", exception);
+                ui.notify(errorEvent("Error while parsing the JSON file, please provide a valid file. For more information, check the logs."));
+            }
         }
     }
 

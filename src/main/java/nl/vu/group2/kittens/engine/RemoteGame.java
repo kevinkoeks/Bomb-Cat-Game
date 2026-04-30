@@ -22,10 +22,13 @@ class RemoteGame implements Game {
     private final Socket socket;
     private final UserInterface ui;
 
+    private static final int READ_TIMEOUT_MS = 30_000;
+
     public RemoteGame(UserInterface ui) {
         this.ui = ui;
         try {
             socket = Network.getInstance().joinGame();
+            socket.setSoTimeout(READ_TIMEOUT_MS);
         } catch (IOException e) {
             final String errorMessage = "Failed to connect to the game";
             log.error(errorMessage, e);

@@ -23,8 +23,13 @@ import static nl.vu.group2.kittens.model.GameEvent.infoEvent;
 @Slf4j
 public class Network {
 
-    public static final int PORT = 8080;
+    public static final int PORT = Integer.getInteger("kittens.port", 8080);
+    public static final String HOST = System.getProperty("kittens.host", "localhost");
     private static final ExecutorService EXECUTOR = Executors.newFixedThreadPool(GameRunner.MAX_PLAYER_COUNT);
+
+    static {
+        Runtime.getRuntime().addShutdownHook(new Thread(EXECUTOR::shutdown, "network-executor-shutdown"));
+    }
 
     private static final Network INSTANCE = new Network();
 
@@ -52,7 +57,7 @@ public class Network {
     }
 
     public Socket joinGame() throws IOException {
-        return new Socket(InetAddress.getLoopbackAddress(), PORT);
+        return new Socket(InetAddress.getByName(HOST), PORT);
     }
 
     private static Player createRemotePlayer(Socket socket) {
